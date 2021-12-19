@@ -1,6 +1,7 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {
+  Button,
   Container,
   Form,
   FormGroup,
@@ -12,16 +13,16 @@ import axios from 'axios';
 export default class App extends React.Component {
   state = {
     q: '',
-    answerText: 'Type your question and hit enter for the answer...',
+    answerText: 'Type your question above and hit enter for the answer...',
     isLoading: false
   }
 
   onChangeQ = evt => this.setState({ q: evt.target.value });
 
-  onKeyDownQ = async evt => {
-    const { isLoading, q } = this.state;
-    if (evt.code === "Enter" && !isLoading && q) {
-      try {
+  getAnswer = async () => {
+    try {
+      const { isLoading, q } = this.state;
+      if (!isLoading && q) {
         this.setState({ isLoading: true, answerText: 'Loading...' });
         const { data } = await axios.get(`https://gpt3-le-be.herokuapp.com/q?question=${q}`);
         console.log(data);
@@ -36,12 +37,19 @@ export default class App extends React.Component {
             answerText: maxScoreData.text
           })
         }
-      } catch (error) {
-        console.log(error);
-        this.setState({ isLoading: false, answerText: 'There was an error. Please Try again..' });
-      } finally {
-        this.setState({ isLoading: false });
       }
+    } catch (error) {
+      console.log(error);
+      this.setState({ isLoading: false, answerText: 'There was an error. Please Try again..' });
+    } finally {
+      this.setState({ isLoading: false });
+    }
+  }
+
+  onKeyDownQ = evt => {
+    const { isLoading, q } = this.state;
+    if (evt.code === "Enter" && !isLoading && q) {
+      this.getAnswer();
     }
   }
 
@@ -62,15 +70,23 @@ export default class App extends React.Component {
       <Container>
         <div style={{ padding: '1rem' }}>
           <Form onSubmit={this.onSubmit}>
-            <Input
-              bsSize="lg"
-              className="mb-3"
-              placeholder="Enter Your Question..."
-              value={q}
-              onChange={this.onChangeQ}
-              onKeyDown={this.onKeyDownQ}
-              disabled={isLoading}
-            />
+            <FormGroup>
+              <Input
+                bsSize="lg"
+                className="mb-3"
+                placeholder="type a word, phrase, or question you'd like to learn more about..."
+                value={q}
+                onChange={this.onChangeQ}
+                onKeyDown={this.onKeyDownQ}
+                disabled={isLoading}
+              />
+              <Button
+                color="primary"
+                onClick={this.getAnswer}
+              >
+                Ask
+              </Button>
+            </FormGroup>
           </Form>
 
           <FormGroup>
